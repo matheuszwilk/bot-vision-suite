@@ -1,7 +1,7 @@
 include README.md
 include LICENSE
 include INSTALL.md
-include PUBLISH_GUIDE.md
+include PUBLISH_CHECKLIST.md
 include requirements.txt
 include pytest.ini
 recursive-include bot_vision *.py

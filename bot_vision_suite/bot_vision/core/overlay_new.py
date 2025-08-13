@@ -9,7 +9,8 @@ import threading
 import logging
 import os
 import sys
-from typing import Tuple
+import time
+from typing import Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -56,122 +57,44 @@ class VisualOverlay:
     
     def _fix_tkinter_environment(self) -> bool:
         """
-        Tenta corrigir problemas comuns do Tkinter de forma dinâmica.
+        Tenta corrigir problemas comuns do Tkinter.
         
         Returns:
             bool: True se conseguiu corrigir
         """
         try:
-            import glob
-            import platform
-            
-            # Método 1: Detectar automaticamente TCL/TK
+            # Método 1: Definir variáveis de ambiente TCL/TK
             python_path = sys.executable
             python_dir = os.path.dirname(python_path)
             
-            # Buscar versões do TCL dinamicamente
-            tcl_search_patterns = []
-            
-            # Para qualquer ambiente Python (venv, conda, sistema)
-            base_dirs = [
-                python_dir,  # Diretório do executável Python
-                os.path.dirname(python_dir),  # Diretório pai
-                os.path.join(python_dir, '..'),  # Relativo
+            # Possíveis locais do TCL/TK
+            tcl_paths = [
+                os.path.join(python_dir, 'tcl'),
+                os.path.join(python_dir, 'lib', 'tcl8.6'),
+                os.path.join(python_dir, 'Scripts', 'tcl'),
+                os.path.join(os.path.dirname(python_dir), 'tcl'),
+                r'C:\Program Files\Python313\tcl',
+                r'C:\Program Files\Python312\tcl',
+                r'C:\Program Files\Python311\tcl',
             ]
             
-            # Adicionar locais específicos do sistema se existirem
-            if platform.system() == "Windows":
-                # Detectar instalações padrão do Windows
-                program_files = [
-                    os.environ.get('PROGRAMFILES', r'C:\Program Files'),
-                    os.environ.get('PROGRAMFILES(X86)', r'C:\Program Files (x86)'),
-                ]
-                
-                for pf in program_files:
-                    if pf and os.path.exists(pf):
-                        # Buscar qualquer versão do Python
-                        python_installs = glob.glob(os.path.join(pf, 'Python*'))
-                        base_dirs.extend(python_installs)
-            
-            # Padrões de busca para TCL
-            for base_dir in base_dirs:
-                if not base_dir or not os.path.exists(base_dir):
-                    continue
-                    
-                # Buscar TCL em vários locais possíveis
-                tcl_patterns = [
-                    os.path.join(base_dir, 'tcl*'),
-                    os.path.join(base_dir, 'lib', 'tcl*'),
-                    os.path.join(base_dir, 'Scripts', 'tcl*'),
-                    os.path.join(base_dir, 'Lib', 'tcl*'),
-                    os.path.join(base_dir, 'share', 'tcl*'),
-                    os.path.join(base_dir, 'Library', 'lib', 'tcl*'),  # Conda
-                ]
-                
-                tcl_search_patterns.extend(tcl_patterns)
-            
-            # Buscar TCL usando os padrões
-            tcl_paths = []
-            for pattern in tcl_search_patterns:
-                matches = glob.glob(pattern)
-                tcl_paths.extend([m for m in matches if os.path.isdir(m)])
-            
-            # Remover duplicatas e ordenar (versões mais recentes primeiro)
-            tcl_paths = sorted(list(set(tcl_paths)), reverse=True)
-            
-            logger.debug(f"Encontrados {len(tcl_paths)} possíveis caminhos TCL")
-            
-            # Testar cada caminho TCL encontrado
             for tcl_path in tcl_paths:
-                try:
+                if os.path.exists(tcl_path):
                     os.environ['TCL_LIBRARY'] = tcl_path
-                    
-                    # Buscar TK correspondente
-                    tk_path = tcl_path.replace('tcl', 'tk')
-                    if not os.path.exists(tk_path):
-                        # Tentar outros padrões para TK
-                        tk_dir = os.path.dirname(tcl_path)
-                        tk_patterns = [
-                            os.path.join(tk_dir, 'tk*'),
-                            tcl_path.replace('tcl', 'tk'),
-                        ]
-                        for tk_pattern in tk_patterns:
-                            tk_matches = glob.glob(tk_pattern)
-                            if tk_matches:
-                                tk_path = tk_matches[0]
-                                break
-                    
+                    tk_path = tcl_path.replace('tcl8.6', 'tk8.6').replace('tcl', 'tk')
                     if os.path.exists(tk_path):
                         os.environ['TK_LIBRARY'] = tk_path
                     
                     # Testa se funcionou
                     if self._check_tkinter_availability():
-                        logger.info(f"✅ Tkinter corrigido - TCL: {tcl_path}")
-                        if 'TK_LIBRARY' in os.environ:
-                            logger.info(f"✅ TK: {os.environ['TK_LIBRARY']}")
+                        logger.info(f"✅ Tkinter corrigido usando TCL_LIBRARY: {tcl_path}")
                         return True
-                        
-                except Exception as e:
-                    logger.debug(f"Erro testando {tcl_path}: {e}")
-                    continue
             
-            logger.debug("Nenhum caminho TCL/TK funcionou")
             return False
             
         except Exception as e:
             logger.debug(f"Erro ao tentar corrigir Tkinter: {e}")
-            
-            # Método alternativo: tentar importar tkinter diretamente
-            try:
-                import tkinter as tk_test
-                test_root = tk_test.Tk()
-                test_root.withdraw()
-                test_root.destroy()
-                logger.info("✅ Tkinter funcionou sem correção de ambiente")
-                return True
-            except Exception as e2:
-                logger.debug(f"Tkinter completamente indisponível: {e2}")
-                return False
+            return False
     
     def _create_overlay_alternative(self, region: Tuple[int, int, int, int]) -> None:
         """
@@ -205,7 +128,6 @@ class VisualOverlay:
             gdi32.LineTo(screen_dc, x, y)
             
             # Aguardar duração
-            import time
             time.sleep(self.duration / 1000.0)
             
             # Limpar
@@ -216,11 +138,11 @@ class VisualOverlay:
             # Forçar repaint da tela
             user32.InvalidateRect(0, None, True)
             
-            logger.info(f"Overlay alternativo criado na região: x={x}, y={y}, w={w}, h={h}")
+            logger.info(f"✅ Overlay alternativo (Windows API) criado na região: x={x}, y={y}, w={w}, h={h}")
             
         except Exception as e:
             logger.warning(f"Overlay alternativo falhou: {e}")
-            logger.info(f"Região destacada seria: x={x}, y={y}, width={w}, height={h}")
+            logger.info(f"💡 Região destacada seria: x={x}, y={y}, width={w}, height={h}")
     
     def show(self, region: Tuple[int, int, int, int], blocking: bool = False) -> None:
         """
@@ -250,12 +172,14 @@ class VisualOverlay:
                 return
         
         # Método 2: Tentar corrigir Tkinter e usar
+        logger.info("🔧 Tentando corrigir configuração do Tkinter...")
         if self._fix_tkinter_environment():
             if self._create_overlay_tkinter(region):
                 return
         
         # Método 3: Overlay alternativo (Windows)
         if os.name == 'nt':
+            logger.info("🎯 Usando overlay alternativo (Windows API)...")
             self._create_overlay_alternative(region)
             return
         

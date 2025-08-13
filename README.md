@@ -2,9 +2,29 @@
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Status](https://img.shields.io/badge/status-beta-orange.svg)
+![Status](https://img.shields.io/badge/status-published-green.svg)
+![PyPI](https://img.shields.io/pypi/v/bot-vision-suite.svg)
 
 **Bot Vision Suite** é uma biblioteca Python avançada para automação de interface gráfica que combina reconhecimento óptico de caracteres (OCR) otimizado com detecção de imagens para executar tarefas automatizadas em aplicações desktop.
+
+## 📦 Instalação e Uso
+
+### Instalar:
+```bash
+pip install bot-vision-suite
+```
+
+### Usar:
+```python
+from bot_vision import BotVision
+
+bot = BotVision()
+bot.click_text("Login")
+bot.click_image("submit.png")
+bot.type_text("Hello World!")
+```
+
+📖 **Veja `bot_vision_suite/IMPORT_GUIDE.md` para documentação completa!**
 
 ## 🚀 Características Principais
 

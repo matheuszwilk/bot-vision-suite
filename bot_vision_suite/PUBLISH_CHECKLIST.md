@@ -8,26 +8,49 @@
 - [x] README.md completo
 - [x] Licença MIT incluída
 - [x] pyproject.toml configurado
+- [x] URLs corrigidas para github.com/matheuszwilk/bot-vision-suite
+- [x] Formato de licença atualizado para SPDX
+- [x] setup.py removido (usando apenas pyproject.toml)
 
-## 🔑 Antes de Publicar
-- [ ] Criar conta no https://test.pypi.org/
-- [ ] Criar conta no https://pypi.org/
-- [ ] Gerar API Token (recomendado) em vez de usar senha
+## 🔑 Configuração Inicial (Fazer uma vez)
+- [ ] Conta criada no https://pypi.org/
+- [ ] API Token gerado no PyPI
+- [ ] Arquivo ~/.pypirc configurado com o token
+- [ ] Ferramentas instaladas: `pip install twine build`
 
-## 🧪 Teste no TestPyPI
-```cmd
-cd /d d:\suite2\Automation-Suite\bot_vision_suite
-twine upload --repository testpypi dist/*
+## 🧪 Para Atualizações Futuras
+
+### Método Automático (Recomendado)
+```powershell
+.\update_pypi.ps1 -NewVersion "1.0.1" -ChangelogMessage "Descrição das mudanças"
 ```
 
-- [ ] Upload para TestPyPI bem-sucedido
-- [ ] Testar instalação: `pip install -i https://test.pypi.org/simple/ bot-vision-suite`
-- [ ] Testar importação: `import bot_vision`
-- [ ] Verificar se todas as funções estão disponíveis
+### Método Manual
+1. [ ] Atualizar versão no `pyproject.toml`
+2. [ ] Atualizar changelog no `README.md`
+3. [ ] Executar testes: `pytest`
+4. [ ] Limpar builds: `Remove-Item -Recurse -Force dist, build, *.egg-info`
+5. [ ] Build: `python -m build`
+6. [ ] Validar: `twine check dist/*`
+7. [ ] Upload: `twine upload dist/*`
 
-## 🚀 Publicação Oficial
-```cmd
-cd /d d:\suite2\Automation-Suite\bot_vision_suite
+## 🚀 Primeira Publicação
+```powershell
+cd 'd:\bot_vision\bot_vision_suite'
+python -m build
+twine check dist/*
+twine upload dist/*
+```
+
+## ✅ Verificação Pós-Upload
+- [ ] Verificar em: https://pypi.org/project/bot-vision-suite/
+- [ ] Testar instalação: `pip install bot-vision-suite`
+- [ ] Testar importação: `python -c "import bot_vision; print('OK')"`
+
+## 📁 Arquivos Criados para Updates Futuros
+- `PYPI_UPDATE_GUIDE.md` - Guia completo
+- `update_pypi.ps1` - Script automatizado
+- `QUICK_REFERENCE.md` - Referência rápida
 twine upload dist/*
 ```
 

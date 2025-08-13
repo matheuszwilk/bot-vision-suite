@@ -4,18 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bot-vision-suite"
-version = "1.0.0"
+version = "1.0.4"
 authors = [
     {name = "Automation Suite Developer", email = "matheuszwilkdev@gmail.com"},
 ]
 description = "Advanced GUI automation with OCR and image recognition"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -57,13 +56,14 @@ web = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/automation-suite/bot-vision-suite"
-Documentation = "https://bot-vision-suite.readthedocs.io/"
-Repository = "https://github.com/automation-suite/bot-vision-suite.git"
-"Bug Tracker" = "https://github.com/automation-suite/bot-vision-suite/issues"
+Homepage = "https://github.com/matheuszwilk/bot-vision-suite"
+Documentation = "https://github.com/matheuszwilk/bot-vision-suite#readme"
+Repository = "https://github.com/matheuszwilk/bot-vision-suite.git"
+"Bug Tracker" = "https://github.com/matheuszwilk/bot-vision-suite/issues"
 
-[tool.setuptools]
-packages = ["bot_vision"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bot_vision*"]
 
 [tool.setuptools.package-dir]
 "" = "."
