@@ -548,6 +548,113 @@ class BotVision:
         # Atualiza também na configuração
         self.config.config["show_overlay"] = self._show_overlay
     
+    def configure_overlay(self, enabled=None, color=None, duration=None, width=None):
+        """
+        Configura parâmetros do overlay de forma conveniente.
+        
+        Args:
+            enabled (bool, optional): Se o overlay está habilitado
+            color (str, optional): Cor do overlay - opções: 'red', 'blue', 'green', 'yellow', 
+                                   'purple', 'orange', 'cyan', 'magenta', 'white', 'black'
+            duration (int, optional): Duração em milissegundos (500-5000 recomendado)
+            width (int, optional): Largura da linha do overlay (1-10 recomendado)
+            
+        Examples:
+            >>> bot = BotVision()
+            >>> bot.configure_overlay(enabled=True, color="blue", duration=2000)
+            >>> bot.configure_overlay(color="green", width=6)
+            
+        Raises:
+            ValueError: Se cor inválida for fornecida
+        """
+        valid_colors = [
+            "red", "blue", "green", "yellow", 
+            "purple", "orange", "cyan", "magenta", 
+            "white", "black"
+        ]
+        
+        if enabled is not None:
+            self.overlay_enabled = enabled
+            self.show_overlay = enabled
+        
+        if color is not None:
+            if color.lower() not in [c.lower() for c in valid_colors]:
+                raise ValueError(f"Cor '{color}' inválida. Cores disponíveis: {', '.join(valid_colors)}")
+            self.config.config["overlay_color"] = color.lower()
+            
+        if duration is not None:
+            if not isinstance(duration, (int, float)) or duration <= 0:
+                raise ValueError(f"Duração deve ser um número positivo, recebido: {duration}")
+            if duration > 10000:
+                logger.warning(f"Duração muito alta ({duration}ms). Considere usar menos de 5000ms.")
+            self.config.config["overlay_duration"] = int(duration)
+            
+        if width is not None:
+            if not isinstance(width, (int, float)) or width <= 0:
+                raise ValueError(f"Largura deve ser um número positivo, recebido: {width}")
+            if width > 15:
+                logger.warning(f"Largura muito alta ({width}). Considere usar menos de 10.")
+            self.config.config["overlay_width"] = int(width)
+    
+    def get_overlay_config(self):
+        """
+        Retorna configuração atual do overlay.
+        
+        Returns:
+            dict: Configurações do overlay
+        """
+        return {
+            "enabled": self.overlay_enabled,
+            "show_overlay": self.show_overlay,
+            "color": self.config.config.get("overlay_color", "red"),
+            "duration": self.config.config.get("overlay_duration", 1000),
+            "width": self.config.config.get("overlay_width", 4)
+        }
+    
+    @staticmethod
+    def get_available_overlay_colors():
+        """
+        Retorna lista de cores disponíveis para overlay.
+        
+        Returns:
+            list: Lista de cores disponíveis
+            
+        Examples:
+            >>> colors = BotVision.get_available_overlay_colors()
+            >>> print("Cores disponíveis:", colors)
+        """
+        return [
+            "red", "blue", "green", "yellow", 
+            "purple", "orange", "cyan", "magenta", 
+            "white", "black"
+        ]
+    
+    def test_overlay_colors(self, duration=1500):
+        """
+        Testa todas as cores disponíveis de overlay.
+        
+        Args:
+            duration (int): Duração de cada cor em milissegundos
+            
+        Examples:
+            >>> bot = BotVision()
+            >>> bot.test_overlay_colors()  # Mostra cada cor por 1.5 segundos
+        """
+        from .core.overlay import VisualOverlay
+        
+        colors = self.get_available_overlay_colors()
+        test_region = (400, 300, 200, 100)  # Centro da tela
+        
+        print("🎨 Testando cores de overlay...")
+        print("📍 Olhe para o centro da tela!")
+        
+        for i, color in enumerate(colors, 1):
+            print(f"   {i}. Cor: {color.upper()}")
+            overlay = VisualOverlay(color=color, width=6, duration=duration)
+            overlay.show(test_region, blocking=True)
+            
+        print("✅ Teste de cores concluído!")
+    
     def _execute_with_individual_backtrack(self, method_name, method_func, *args, **kwargs):
         """
         Executa método individual com capacidade de backtrack.

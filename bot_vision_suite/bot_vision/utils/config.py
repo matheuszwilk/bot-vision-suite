@@ -43,6 +43,33 @@ class BotVisionConfig:
         
         self._detect_tesseract()
         self._validate_dependencies()
+        self._validate_overlay_config()
+    
+    def _validate_overlay_config(self) -> None:
+        """Valida configurações do overlay."""
+        valid_colors = [
+            "red", "blue", "green", "yellow", 
+            "purple", "orange", "cyan", "magenta", 
+            "white", "black"
+        ]
+        
+        overlay_color = self.config.get("overlay_color", "red")
+        if overlay_color not in valid_colors:
+            logger.warning(f"Cor de overlay inválida '{overlay_color}'. Usando 'red'. "
+                         f"Cores válidas: {', '.join(valid_colors)}")
+            self.config["overlay_color"] = "red"
+        
+        # Validar duração
+        overlay_duration = self.config.get("overlay_duration", 1000)
+        if not isinstance(overlay_duration, (int, float)) or overlay_duration <= 0:
+            logger.warning(f"Duração de overlay inválida '{overlay_duration}'. Usando 1000ms.")
+            self.config["overlay_duration"] = 1000
+        
+        # Validar largura
+        overlay_width = self.config.get("overlay_width", 4)
+        if not isinstance(overlay_width, (int, float)) or overlay_width <= 0:
+            logger.warning(f"Largura de overlay inválida '{overlay_width}'. Usando 4.")
+            self.config["overlay_width"] = 4
     
     def _load_default_config(self) -> Dict[str, Any]:
         """Carrega configurações padrão."""
@@ -53,9 +80,10 @@ class BotVisionConfig:
             "retry_attempts": 3,
             "default_delay": 1.0,
             "overlay_duration": 1000,
-            "overlay_color": "red",
+            "overlay_color": "red",  # red, blue, green, yellow, purple, orange, cyan, magenta, white
             "overlay_width": 4,
-            "show_overlay": True,  # Controla se exibe overlay vermelho antes do clique
+            "show_overlay": True,  # Controla se exibe overlay visual antes do clique
+            "overlay_enabled": True,  # Controla se o sistema de overlay está ativo
             "log_level": "INFO",
             "ocr_languages": ["eng"],
             "image_processing_methods": "all",  # ou lista específica

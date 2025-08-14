@@ -494,7 +494,20 @@ class TaskExecutor:
         
         # Mostra overlay visual apenas se habilitado
         if show_overlay_enabled:
-            overlay_thread = threading.Thread(target=show_overlay, args=(location, 1000))
+            # Obter configurações de overlay da configuração
+            overlay_duration = self.config.get('overlay_duration', 1000)
+            overlay_color = self.config.get('overlay_color', 'red')
+            overlay_width = self.config.get('overlay_width', 4)
+            
+            overlay_thread = threading.Thread(
+                target=show_overlay, 
+                args=(location,),
+                kwargs={
+                    'duration': overlay_duration,
+                    'color': overlay_color,
+                    'width': overlay_width
+                }
+            )
             overlay_thread.start()
             
             # Pequeno delay para exibir overlay

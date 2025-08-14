@@ -159,11 +159,17 @@ Initialize configuration.
 - `retry_delay` (float): Delay between retries in seconds
 - `debug_mode` (bool): Enable debug logging and overlays
 - `tesseract_path` (str, optional): Custom Tesseract executable path
+- `overlay_color` (str): Overlay color - available: 'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'cyan', 'magenta', 'white', 'black'
+- `overlay_duration` (int): Overlay duration in milliseconds (500-5000 recommended)
+- `overlay_width` (int): Overlay line width (1-10 recommended)
+- `show_overlay` (bool): Enable/disable overlay display
+- `overlay_enabled` (bool): Enable/disable overlay system
 
 **Example:**
 ```python
 from bot_vision.utils.config import BotVisionConfig
 
+# Basic configuration
 config = BotVisionConfig(
     confidence_threshold=0.9,
     max_retries=5,
@@ -171,7 +177,31 @@ config = BotVisionConfig(
     debug_mode=True,
     tesseract_path="/usr/local/bin/tesseract"
 )
+
+# Configuration with overlay colors
+config = BotVisionConfig({
+    "confidence_threshold": 85.0,
+    "retry_attempts": 3,
+    "overlay_duration": 2000,      # 2 seconds
+    "overlay_color": "blue",       # Blue color
+    "overlay_width": 6,            # Thick line
+    "show_overlay": True,          # Enable overlay
+    "ocr_languages": ["eng", "por"],
+    "log_level": "DEBUG"
+})
 ```
+
+**Available Overlay Colors:**
+- `red` - Classic red (default)
+- `blue` - Professional blue  
+- `green` - Success green
+- `yellow` - Attention yellow
+- `purple` - Creative purple
+- `orange` - Vibrant orange
+- `cyan` - Modern cyan
+- `magenta` - Bold magenta
+- `white` - Minimalist white
+- `black` - Elegant black
 
 #### `from_dict(config_dict)`
 

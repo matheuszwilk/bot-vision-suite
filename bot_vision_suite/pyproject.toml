@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bot-vision-suite"
-version = "1.0.5"
+version = "1.0.8"
 authors = [
     {name = "Automation Suite Developer", email = "matheuszwilkdev@gmail.com"},
 ]
-description = "Advanced GUI automation with OCR and image recognition"
+description = "Biblioteca Python avançada para automação de interface gráfica com OCR multi-técnica, detecção de imagens robusta e sistema de backtrack inteligente"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.8"
@@ -33,7 +33,6 @@ dependencies = [
     "Pillow>=10.0.0",
     "numpy==1.26.4",
     "pyperclip>=1.8.2",
-    "tkinter",  # Adicionado para garantir funcionamento do overlay
 ]
 
 [project.optional-dependencies]
