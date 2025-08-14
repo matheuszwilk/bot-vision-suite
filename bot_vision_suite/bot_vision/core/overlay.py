@@ -183,6 +183,7 @@ class VisualOverlay:
         try:
             import ctypes
             from ctypes import wintypes
+            import time
             
             x, y, w, h = region
             
@@ -192,35 +193,77 @@ class VisualOverlay:
             
             # Obter DC da tela
             screen_dc = user32.GetDC(0)
+            if not screen_dc:
+                raise Exception("Não foi possível obter DC da tela")
             
-            # Criar pen vermelho
-            red_pen = gdi32.CreatePen(0, self.width, 0x0000FF)  # RGB vermelho
-            old_pen = gdi32.SelectObject(screen_dc, red_pen)
+            try:
+                # Definir cores (BGR format para Windows)
+                colors = {
+                    'red': 0x0000FF,     # BGR: Blue=0, Green=0, Red=255
+                    'blue': 0xFF0000,    # BGR: Blue=255, Green=0, Red=0  
+                    'green': 0x00FF00,   # BGR: Blue=0, Green=255, Red=0
+                    'yellow': 0x00FFFF,  # BGR: Blue=0, Green=255, Red=255
+                    'magenta': 0xFF00FF, # BGR: Blue=255, Green=0, Red=255
+                    'cyan': 0xFFFF00,    # BGR: Blue=255, Green=255, Red=0
+                }
+                
+                pen_color = colors.get(self.color.lower(), colors['red'])
+                
+                # Criar pen mais grosso para melhor visibilidade
+                pen_width = max(4, self.width)
+                pen = gdi32.CreatePen(0, pen_width, pen_color)
+                if not pen:
+                    raise Exception("Não foi possível criar pen")
+                    
+                old_pen = gdi32.SelectObject(screen_dc, pen)
+                
+                # Método simples: desenhar múltiplas linhas para formar um retângulo grosso
+                for i in range(pen_width):
+                    # Linha superior
+                    gdi32.MoveToEx(screen_dc, ctypes.c_int(x), ctypes.c_int(y + i), None)
+                    gdi32.LineTo(screen_dc, ctypes.c_int(x + w), ctypes.c_int(y + i))
+                    
+                    # Linha inferior
+                    gdi32.MoveToEx(screen_dc, ctypes.c_int(x), ctypes.c_int(y + h - i), None)
+                    gdi32.LineTo(screen_dc, ctypes.c_int(x + w), ctypes.c_int(y + h - i))
+                    
+                    # Linha esquerda
+                    gdi32.MoveToEx(screen_dc, ctypes.c_int(x + i), ctypes.c_int(y), None)
+                    gdi32.LineTo(screen_dc, ctypes.c_int(x + i), ctypes.c_int(y + h))
+                    
+                    # Linha direita
+                    gdi32.MoveToEx(screen_dc, ctypes.c_int(x + w - i), ctypes.c_int(y), None)
+                    gdi32.LineTo(screen_dc, ctypes.c_int(x + w - i), ctypes.c_int(y + h))
+                
+                # Forçar atualização imediata
+                gdi32.GdiFlush()
+                
+                # Aguardar duração
+                time.sleep(self.duration / 1000.0)
+                
+                logger.info(f"✅ Overlay visual exibido na região: x={x}, y={y}, largura={w}, altura={h}")
+                
+            finally:
+                # Limpar recursos
+                if old_pen:
+                    gdi32.SelectObject(screen_dc, old_pen)
+                if pen:
+                    gdi32.DeleteObject(pen)
+                user32.ReleaseDC(0, screen_dc)
+                
+                # Forçar repaint da tela para remover o overlay
+                user32.InvalidateRect(0, None, True)
+                user32.UpdateWindow(0)
             
-            # Desenhar retângulo
-            gdi32.MoveToEx(screen_dc, x, y, None)
-            gdi32.LineTo(screen_dc, x + w, y)
-            gdi32.LineTo(screen_dc, x + w, y + h)
-            gdi32.LineTo(screen_dc, x, y + h)
-            gdi32.LineTo(screen_dc, x, y)
-            
-            # Aguardar duração
-            import time
-            time.sleep(self.duration / 1000.0)
-            
-            # Limpar
-            gdi32.SelectObject(screen_dc, old_pen)
-            gdi32.DeleteObject(red_pen)
-            user32.ReleaseDC(0, screen_dc)
-            
-            # Forçar repaint da tela
-            user32.InvalidateRect(0, None, True)
-            
-            logger.info(f"Overlay alternativo criado na região: x={x}, y={y}, w={w}, h={h}")
+            logger.info(f"✅ Overlay alternativo (Windows API) criado na região: x={x}, y={y}, w={w}, h={h}")
             
         except Exception as e:
             logger.warning(f"Overlay alternativo falhou: {e}")
-            logger.info(f"Região destacada seria: x={x}, y={y}, width={w}, height={h}")
+            # Implementação de fallback usando print com coordenadas
+            center_x = x + w // 2
+            center_y = y + h // 2
+            logger.info(f"🎯 REGIÃO DESTACADA: Posição({x}, {y}) Tamanho({w}x{h}) Centro({center_x}, {center_y})")
+            logger.info(f"📍 Local do clique seria aproximadamente: ({center_x}, {center_y})")
     
     def show(self, region: Tuple[int, int, int, int], blocking: bool = False) -> None:
         """
@@ -278,39 +321,82 @@ class VisualOverlay:
             
             # Cria janela transparente
             root = tk.Tk()
+            root.withdraw()  # Esconde temporariamente
             root.overrideredirect(True)
             root.attributes("-topmost", True)
-            root.config(bg='black')
             
-            # Configurações específicas do Windows
+            # Configurações específicas do Windows para transparência
             if os.name == 'nt':
                 try:
+                    # Tenta fazer a janela semi-transparente
+                    root.attributes('-alpha', 0.7)
+                    root.config(bg='black')
                     root.attributes('-transparentcolor', 'black')
-                    root.attributes('-alpha', 0.3)
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Transparência não disponível: {e}")
+                    root.config(bg='gray10')
+            else:
+                root.config(bg='black')
             
             # Define tamanho da tela
             screen_width = root.winfo_screenwidth()
             screen_height = root.winfo_screenheight()
             root.geometry(f"{screen_width}x{screen_height}+0+0")
             
-            # Cria canvas e desenha retângulo
+            # Cria canvas que cobre toda a tela
             canvas = tk.Canvas(
                 root, 
                 width=screen_width, 
                 height=screen_height, 
-                bg='black', 
-                highlightthickness=0
+                bg='black' if os.name == 'nt' else 'gray10',
+                highlightthickness=0,
+                bd=0
             )
-            canvas.pack()
+            canvas.pack(fill='both', expand=True)
+            
+            # Define cores mais visíveis
+            colors = {
+                'red': '#FF0000',
+                'blue': '#0080FF', 
+                'green': '#00FF00',
+                'yellow': '#FFFF00',
+                'magenta': '#FF00FF',
+                'cyan': '#00FFFF',
+                'white': '#FFFFFF'
+            }
+            
+            overlay_color = colors.get(self.color.lower(), colors['red'])
+            line_width = max(3, self.width)
             
             # Desenha o retângulo destacando a região
             canvas.create_rectangle(
                 x, y, x + w, y + h, 
-                outline=self.color, 
-                width=self.width
+                outline=overlay_color, 
+                width=line_width,
+                fill=''  # Sem preenchimento
             )
+            
+            # Adiciona um ponto no centro para indicar onde será clicado
+            center_x = x + w // 2
+            center_y = y + h // 2
+            
+            # Desenha uma cruz no centro
+            cross_size = min(10, w//4, h//4)
+            canvas.create_line(
+                center_x - cross_size, center_y,
+                center_x + cross_size, center_y,
+                fill=overlay_color, width=line_width
+            )
+            canvas.create_line(
+                center_x, center_y - cross_size,
+                center_x, center_y + cross_size,
+                fill=overlay_color, width=line_width
+            )
+            
+            # Mostra a janela
+            root.deiconify()
+            root.lift()
+            root.focus_force()
             
             # Agenda destruição da janela
             root.after(self.duration, root.destroy)

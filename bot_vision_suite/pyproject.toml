@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bot-vision-suite"
-version = "1.0.4"
+version = "1.0.5"
 authors = [
     {name = "Automation Suite Developer", email = "matheuszwilkdev@gmail.com"},
 ]
@@ -32,7 +32,8 @@ dependencies = [
     "opencv-python==4.9.0.80",
     "Pillow>=10.0.0",
     "numpy==1.26.4",
-    "pyperclip>=1.8.2"
+    "pyperclip>=1.8.2",
+    "tkinter",  # Adicionado para garantir funcionamento do overlay
 ]
 
 [project.optional-dependencies]

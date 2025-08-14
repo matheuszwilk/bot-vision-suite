@@ -482,6 +482,10 @@ class BotVision:
         self.ocr_engine = OCREngine(self.config)
         self.image_processor = ImageProcessor()
         
+        # Configurações de overlay - acessíveis via propriedades
+        self._overlay_enabled = self.config.get("overlay_enabled", True)
+        self._show_overlay = self.config.get("show_overlay", True)
+        
         # Sistema de backtrack para métodos individuais
         self.individual_task_history = []  # Histórico de métodos executados
         self.backtrack_enabled_globally = False  # Se está em modo backtrack
@@ -518,6 +522,31 @@ class BotVision:
         total_tasks = len(self.individual_task_history)
         logger.info(f"🏁 Sessão finalizada: {successful_tasks}/{total_tasks} tarefas bem-sucedidas")
         return successful_tasks, total_tasks
+    
+    # Propriedades de controle do overlay
+    @property
+    def overlay_enabled(self):
+        """Controla se o sistema de overlay está ativo."""
+        return self._overlay_enabled
+    
+    @overlay_enabled.setter
+    def overlay_enabled(self, value):
+        """Define se o sistema de overlay está ativo."""
+        self._overlay_enabled = bool(value)
+        # Atualiza também na configuração
+        self.config.config["overlay_enabled"] = self._overlay_enabled
+    
+    @property
+    def show_overlay(self):
+        """Controla se exibe overlay visual antes dos cliques."""
+        return self._show_overlay
+    
+    @show_overlay.setter
+    def show_overlay(self, value):
+        """Define se exibe overlay visual antes dos cliques."""
+        self._show_overlay = bool(value)
+        # Atualiza também na configuração
+        self.config.config["show_overlay"] = self._show_overlay
     
     def _execute_with_individual_backtrack(self, method_name, method_func, *args, **kwargs):
         """
